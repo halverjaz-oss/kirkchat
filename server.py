@@ -24,7 +24,7 @@ import urllib.parse
 
 # ----------------------------------------------------------------------------- config
 HOST = "0.0.0.0"          # 0.0.0.0 = accessible depuis le reseau local (telephone)
-PORT = 8000
+PORT = int(os.environ.get("PORT", 8000))  # Railway injecte PORT automatiquement
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 WS_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
