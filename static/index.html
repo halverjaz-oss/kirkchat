@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#3C3B6E" />
+<title>KirkChat — Chat vidéo aléatoire 🇺🇸</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+
+<!-- Banniere drapeau americain -->
+<div class="flag-banner" aria-hidden="true">
+  <div class="stripes"></div>
+</div>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="logo"><img src="/logo-man.png" class="logo-img" alt="KirkChat" /> KirkChat</span>
+    <span class="tagline">Rencontrez des inconnus en vidéo — USA Vibes</span>
+  </div>
+  <div class="online-pill" id="onlinePill">
+    <span class="dot"></span><span id="onlineCount">0</span> en ligne
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- Ecran d'accueil -->
+  <section id="lobby" class="card lobby">
+    <div class="hero">
+      <h1>Bienvenue sur <span class="brand-accent">KirkChat</span> <span class="flag-emoji">🇺🇸</span></h1>
+      <p class="lead">
+        Discutez face caméra avec des inconnus du monde entier, comme sur
+        Omegle ou OmeTV. Un clic, une caméra, un micro — et c'est parti.
+        Fonctionne sur <strong>ordinateur</strong> comme sur <strong>téléphone</strong>.
+      </p>
+
+      <div class="rules">
+        <div class="rule"><span>📷</span> Active ta caméra et ton micro</div>
+        <div class="rule"><span>🎲</span> On te connecte à un inconnu au hasard</div>
+        <div class="rule"><span>⏭️</span> « Suivant » pour changer de personne</div>
+        <div class="rule"><span>💬</span> Tchat texte intégré en bonus</div>
+      </div>
+
+      <button id="startBtn" class="btn btn-primary btn-lg">
+        ▶ Commencer le chat vidéo
+      </button>
+
+      <div class="consent">
+        <label><input type="checkbox" id="ageCheck" /> J'ai 18 ans ou plus et j'accepte les <a href="#" id="openRules">règles de la communauté</a>.</label>
+      </div>
+
+      <div id="permHint" class="hint hidden"></div>
+    </div>
+  </section>
+
+  <!-- Ecran de chat -->
+  <section id="chat" class="chat-view hidden">
+    <div class="stage">
+      <video id="remote" playsinline autoplay muted></video>
+      <div id="remoteCover" class="remote-cover">
+        <div class="cover-inner">
+          <div class="spinner"></div>
+          <p id="statusText">Recherche d'un inconnu…</p>
+        </div>
+      </div>
+      <video id="local" class="pip" playsinline autoplay muted></video>
+      <div class="pip-label">Vous</div>
+    </div>
+
+    <div class="controls">
+      <button id="nextBtn" class="btn btn-secondary" title="Passer à un autre inconnu">⏭️ Suivant</button>
+      <button id="micBtn" class="btn btn-icon" title="Micro">🎤</button>
+      <button id="camBtn" class="btn btn-icon" title="Caméra">📷</button>
+      <button id="stopBtn" class="btn btn-danger" title="Arrêter">■ Arrêter</button>
+    </div>
+
+    <div class="chat-panel">
+      <div class="chat-head">💬 Tchat</div>
+      <div id="messages" class="messages"></div>
+      <form id="chatForm" class="chat-input">
+        <input id="chatText" type="text" placeholder="Écris un message…" autocomplete="off" maxlength="500" />
+        <button type="submit" class="btn btn-small">Envoyer</button>
+      </form>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="footer-stars">★ ★ ★ ★ ★</div>
+  <p>KirkChat — Rendez-vous vidéo aléatoire. Restez respectueux. 🇺🇸</p>
+  <p class="fine">En utilisant KirkChat, vous reconnaissez être majeur. Contenus interdits : mineurs, nudité, violence, harcèlement.</p>
+</footer>
+
+<script src="/app.js"></script>
+</body>
+</html>
