@@ -34,8 +34,34 @@ let camOn = true;
 let wsReconnectTimer = null;
 let pendingCandidates = [];   // candidats ICE recus avant la description distante
 
-const ICE = { iceServers: [{ urls: "stun:stun.l.google.com:19302" },
-                           { urls: "stun:stun1.l.google.com:19302" }] };
+const ICE = {
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" },
+    { urls: "stun:stun2.l.google.com:19302" },
+    { urls: "stun:stun3.l.google.com:19302" },
+    { urls: "stun:stun4.l.google.com:19302" },
+    {
+      urls: [
+        "turn:openrelay.metered.ca:80",
+        "turn:openrelay.metered.ca:443",
+        "turn:openrelay.metered.ca:443?transport=tcp"
+      ],
+      username: "openrelayproject",
+      credential: "openrelayproject"
+    },
+    {
+      urls: [
+        "turn:relay.metered.ca:80",
+        "turn:relay.metered.ca:443",
+        "turn:relay.metered.ca:443?transport=tcp"
+      ],
+      username: "openrelayproject",
+      credential: "openrelayproject"
+    }
+  ],
+  iceCandidatePoolSize: 10
+};
 
 // ---- Utilitaires UI
 function setStatus(text){ statusText.textContent = text; }
@@ -159,18 +185,32 @@ async function onMessage(raw){
 
     case "offer":
       if (pc){
-        try{ await pc.setRemoteDescription(data.sdp); flushCandidates(); }catch(_){}
+        try{
+          await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
+          flushCandidates();
+          // si on est callee, on cree l'answer tout de suite
+          if (role === "callee"){
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+            send({ type:"answer", sdp: pc.localDescription });
+          }
+        }catch(e){ console.warn("offer error", e); }
       }
       break;
 
     case "answer":
       if (pc){
-        try{ await pc.setRemoteDescription(data.sdp); flushCandidates(); }catch(_){}
+        try{
+          await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
+          flushCandidates();
+        }catch(e){ console.warn("answer error", e); }
       }
       break;
 
     case "ice":
-      if (pc && data.candidate){ await applyCandidate(data.candidate); }
+      if (pc && data.candidate){
+        try{ await applyCandidate(new RTCIceCandidate(data.candidate)); }catch(_){}
+      }
       break;
 
     case "chat":
@@ -244,11 +284,13 @@ async function setupPeer(myRole){
   if (myRole === "caller"){
     chatChannel = pc.createDataChannel("chat", { ordered:true });
     bindChatChannel(chatChannel);
+    // petit delai pour laisser le temps au callee d'etre pret
+    await new Promise(r => setTimeout(r, 500));
     try{
       const offer = await pc.createOffer({ offerToReceiveAudio:true, offerToReceiveVideo:true });
       await pc.setLocalDescription(offer);
       send({ type:"offer", sdp: pc.localDescription });
-    }catch(_){ /* ignore */ }
+    }catch(e){ console.warn("offer creation error", e); }
   } else {
     pc.ondatachannel = (e)=>{ chatChannel = e.channel; bindChatChannel(chatChannel); };
   }
