@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>KirkChat — Panel Admin 🛡️</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Segoe UI",system-ui,sans-serif;background:#0b0f1f;color:#e0e4f0;min-height:100vh}
+
+/* Header */
+.topbar{background:linear-gradient(135deg,#3C3B6E,#5b5a9c);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.topbar h1{font-size:22px;color:#fff}
+.topbar h1 span{color:#B22234}
+.stats{display:flex;gap:16px}
+.stat{background:rgba(255,255,255,.1);border-radius:10px;padding:8px 16px;text-align:center}
+.stat-n{font-size:22px;font-weight:800;color:#fff}
+.stat-l{font-size:11px;color:#c7ccdc}
+
+/* Layout */
+.wrap{max-width:1200px;margin:0 auto;padding:24px 16px}
+
+/* Broadcast */
+.broadcast-bar{background:#1a1f3a;border:1px solid #2a2f4a;border-radius:14px;padding:16px;margin-bottom:24px;display:flex;gap:10px}
+.broadcast-bar input{flex:1;background:#0d1123;border:1px solid #2a2f4a;border-radius:10px;padding:12px;color:#fff;font-size:14px;outline:none}
+.broadcast-bar input:focus{border-color:#3C3B6E}
+
+/* Table */
+.card{background:#1a1f3a;border:1px solid #2a2f4a;border-radius:14px;overflow:hidden}
+.card-head{padding:14px 20px;border-bottom:1px solid #2a2f4a;display:flex;align-items:center;justify-content:space-between}
+.card-head h2{font-size:16px;color:#fff}
+table{width:100%;border-collapse:collapse}
+th{background:#111627;color:#8a90ad;font-size:12px;text-transform:uppercase;letter-spacing:.6px;padding:10px 16px;text-align:left}
+td{padding:12px 16px;border-bottom:1px solid #1e2440;font-size:14px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.03)}
+
+/* Badges */
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700}
+.badge-active{background:rgba(40,224,107,.15);color:#28e06b}
+.badge-waiting{background:rgba(255,200,0,.15);color:#ffc800}
+.badge-muted{background:rgba(178,34,52,.15);color:#e05a6e}
+.badge-banned{background:#2a0a0a;color:#e05a6e;border:1px solid #5a1a1a}
+.badge-partner{background:rgba(60,59,110,.3);color:#9b99d9;font-size:10px}
+
+/* Boutons action */
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+.btn{border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;transition:opacity .15s}
+.btn:hover{opacity:.85}
+.btn:active{opacity:.7}
+.btn-kick{background:#e67e22;color:#fff}
+.btn-ban{background:#B22234;color:#fff}
+.btn-mute{background:#8e44ad;color:#fff}
+.btn-unmute{background:#27ae60;color:#fff}
+.btn-next{background:#2980b9;color:#fff}
+.btn-broadcast{background:linear-gradient(135deg,#3C3B6E,#B22234);color:#fff;padding:10px 20px;font-size:14px}
+.btn-refresh{background:#2a2f4a;color:#c7ccdc;padding:6px 14px;font-size:12px}
+
+/* IP bannies */
+.banned-section{margin-top:24px}
+.banned-list{padding:16px;display:flex;flex-wrap:wrap;gap:8px;min-height:48px}
+.ip-tag{background:#2a0a0a;border:1px solid #5a1a1a;color:#e05a6e;border-radius:8px;padding:5px 12px;font-size:13px;display:flex;align-items:center;gap:8px}
+.ip-tag button{background:none;border:none;color:#e05a6e;cursor:pointer;font-size:16px;line-height:1}
+
+/* Vide */
+.empty{padding:40px;text-align:center;color:#5e6380;font-size:14px}
+
+/* Notifications */
+.notif{position:fixed;top:20px;right:20px;background:#27ae60;color:#fff;padding:12px 20px;border-radius:10px;font-weight:700;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.4);z-index:999;animation:fadeIn .2s}
+.notif.err{background:#B22234}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+
+.cid{color:#5e6380;font-size:12px}
+.ip{color:#8a90ad;font-size:12px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>🛡️ KirkChat <span>Admin</span></h1>
+  <div class="stats">
+    <div class="stat"><div class="stat-n" id="statTotal">0</div><div class="stat-l">Connectés</div></div>
+    <div class="stat"><div class="stat-n" id="statWaiting">0</div><div class="stat-l">En attente</div></div>
+    <div class="stat"><div class="stat-n" id="statPaired">0</div><div class="stat-l">En chat</div></div>
+    <div class="stat"><div class="stat-n" id="statBanned">0</div><div class="stat-l">IPs bannies</div></div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- Broadcast -->
+  <div class="broadcast-bar">
+    <input id="broadcastText" type="text" placeholder="Message à envoyer à TOUS les utilisateurs connectés…" maxlength="200"/>
+    <button class="btn btn-broadcast" onclick="broadcast()">📢 Envoyer à tous</button>
+  </div>
+
+  <!-- Table clients -->
+  <div class="card">
+    <div class="card-head">
+      <h2>👥 Utilisateurs connectés</h2>
+      <button class="btn btn-refresh" onclick="refresh()">🔄 Actualiser</button>
+    </div>
+    <div id="tableWrap">
+      <div class="empty">Chargement…</div>
+    </div>
+  </div>
+
+  <!-- IPs bannies -->
+  <div class="banned-section card" style="margin-top:24px">
+    <div class="card-head">
+      <h2>🚫 IPs bannies</h2>
+      <button class="btn btn-refresh" onclick="refresh()">🔄 Actualiser</button>
+    </div>
+    <div id="bannedList" class="banned-list"></div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+let refreshTimer = null;
+
+async function api(path, method="GET", body=null){
+  const opts = { method, headers:{"Content-Type":"application/json"} };
+  if(body) opts.body = JSON.stringify(body);
+  const r = await fetch(path, opts);
+  return r.json();
+}
+
+function notify(msg, err=false){
+  const d = document.createElement("div");
+  d.className = "notif" + (err?" err":"");
+  d.textContent = msg;
+  document.body.appendChild(d);
+  setTimeout(()=>d.remove(), 3000);
+}
+
+function elapsed(ts){
+  const s = Math.floor(Date.now()/1000) - ts;
+  if(s < 60) return s+"s";
+  if(s < 3600) return Math.floor(s/60)+"min";
+  return Math.floor(s/3600)+"h";
+}
+
+async function refresh(){
+  try{
+    const [clients, banned] = await Promise.all([
+      api("/api/clients"),
+      api("/api/banned")
+    ]);
+    renderTable(clients);
+    renderBanned(banned);
+  }catch(e){
+    notify("Erreur de chargement", true);
+  }
+}
+
+function renderTable(clients){
+  document.getElementById("statTotal").textContent = clients.length;
+  document.getElementById("statWaiting").textContent = clients.filter(c=>c.waiting).length;
+  document.getElementById("statPaired").textContent = clients.filter(c=>c.partner!=null).length;
+
+  if(!clients.length){
+    document.getElementById("tableWrap").innerHTML = '<div class="empty">Aucun utilisateur connecté</div>';
+    return;
+  }
+
+  let html = `<table>
+    <thead><tr>
+      <th>ID</th><th>IP</th><th>Pseudo</th><th>Statut</th><th>Partenaire</th><th>Durée</th><th>Actions</th>
+    </tr></thead><tbody>`;
+
+  for(const c of clients){
+    let statusBadge = "";
+    if(c.banned) statusBadge = '<span class="badge badge-banned">BANNI</span>';
+    else if(c.muted) statusBadge = '<span class="badge badge-muted">MUTE</span>';
+    else if(c.waiting) statusBadge = '<span class="badge badge-waiting">En attente</span>';
+    else if(c.partner) statusBadge = '<span class="badge badge-active">En chat</span>';
+    else statusBadge = '<span class="badge">Idle</span>';
+
+    const partner = c.partner ? `<span class="badge badge-partner">↔ #${c.partner}</span>` : "—";
+    const muteBtn = c.muted
+      ? `<button class="btn btn-unmute" onclick="mod('unmute',${c.cid})">🔊 Démuter</button>`
+      : `<button class="btn btn-mute" onclick="mod('mute',${c.cid})">🔇 Muter</button>`;
+
+    html += `<tr>
+      <td><span class="cid">#${c.cid}</span></td>
+      <td><span class="ip">${c.ip}</span></td>
+      <td>${c.username || '<span style="color:#5e6380">—</span>'}</td>
+      <td>${statusBadge}</td>
+      <td>${partner}</td>
+      <td>${elapsed(c.joined)}</td>
+      <td>
+        <div class="actions">
+          ${muteBtn}
+          <button class="btn btn-next" onclick="mod('next',${c.cid})">⏭️ Next</button>
+          <button class="btn btn-kick" onclick="mod('kick',${c.cid})">👢 Kick</button>
+          <button class="btn btn-ban" onclick="modBan(${c.cid},'${c.ip}')">🚫 Ban</button>
+        </div>
+      </td>
+    </tr>`;
+  }
+  html += "</tbody></table>";
+  document.getElementById("tableWrap").innerHTML = html;
+}
+
+function renderBanned(ips){
+  document.getElementById("statBanned").textContent = ips.length;
+  const el = document.getElementById("bannedList");
+  if(!ips.length){ el.innerHTML = '<span style="color:#5e6380;font-size:13px">Aucune IP bannie</span>'; return; }
+  el.innerHTML = ips.map(ip =>
+    `<div class="ip-tag">${ip}<button onclick="unban('${ip}')" title="Débannir">✕</button></div>`
+  ).join("");
+}
+
+async function mod(action, cid){
+  const labels = {kick:"Kické",ban:"Banni",mute:"Muté",unmute:"Démuté",next:"Changé d'inconnu"};
+  await api("/api/mod","POST",{action,cid});
+  notify(`#${cid} — ${labels[action]||action}`);
+  refresh();
+}
+
+async function modBan(cid, ip){
+  if(!confirm(`Bannir #${cid} (${ip}) ? Cette IP ne pourra plus se connecter.`)) return;
+  await api("/api/mod","POST",{action:"ban",cid});
+  notify(`#${cid} banni et kicked`);
+  refresh();
+}
+
+async function unban(ip){
+  await api("/api/mod","POST",{action:"unban_ip",ip});
+  notify(`${ip} débanni`);
+  refresh();
+}
+
+async function broadcast(){
+  const text = document.getElementById("broadcastText").value.trim();
+  if(!text){ notify("Écris un message d'abord", true); return; }
+  await api("/api/mod","POST",{action:"broadcast",text});
+  document.getElementById("broadcastText").value = "";
+  notify("Message envoyé à tous !");
+}
+
+// Enter pour broadcast
+document.getElementById("broadcastText").addEventListener("keydown", e=>{
+  if(e.key==="Enter") broadcast();
+});
+
+// Refresh automatique toutes les 5 secondes
+refresh();
+setInterval(refresh, 5000);
+</script>
+</body>
+</html>

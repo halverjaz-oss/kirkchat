@@ -229,6 +229,25 @@ async function onMessage(raw){
     case "count":
       if (typeof data.n === "number") onlineCount.textContent = data.n;
       break;
+
+    case "mod_notice":
+      sysMsg("⚠️ " + data.text);
+      break;
+
+    case "kicked":
+      sysMsg("👢 " + (data.reason || "Vous avez été expulsé."));
+      setTimeout(stopAll, 2000);
+      break;
+
+    case "banned":
+      sysMsg("🚫 " + (data.reason || "Vous avez été banni."));
+      setTimeout(()=>{
+        stopAll();
+        document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0b0f1f;color:#fff;font-family:sans-serif;text-align:center;padding:20px">
+          <div><h1 style="color:#B22234;font-size:40px">🚫</h1><h2>Accès refusé</h2><p style="color:#8a90ad;margin-top:10px">${data.reason||"Vous avez été banni de KirkChat."}</p></div>
+        </div>`;
+      }, 2000);
+      break;
   }
 }
 
